@@ -101,6 +101,7 @@ input::placeholder, textarea::placeholder { color: #a6a6a6; opacity: 1; }
 .activities { display: grid; gap: 9px; }
 .activity { background: #101010; border: 1px solid var(--line); border-radius: 11px; padding: 10px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: start; }
 .activity-fields { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) minmax(0, .9fr); gap: 8px; }
+.activity[data-category=weights] .activity-fields { grid-template-columns: minmax(0, 1.35fr) repeat(3, minmax(0, 1fr)); }
 .activity[data-category=other] .activity-fields { grid-template-columns: 1fr; }
 .activity .wide { grid-column: 1 / -1; }
 .activity .category-label { font-size: .8125rem; color: var(--accent); font-weight: 760; }
@@ -197,6 +198,9 @@ input::placeholder, textarea::placeholder { color: #a6a6a6; opacity: 1; }
   .preview-panel { position: static; }
   .artwork { width: min(100%, 304px); }
 }
+@media (max-width: 520px) {
+  .activity[data-category=weights] .activity-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 @media (max-width: 385px) {
   .shell { width: calc(100% - 20px); }
   .form-panel { padding: 11px; }
@@ -253,7 +257,7 @@ input::placeholder, textarea::placeholder { color: #a6a6a6; opacity: 1; }
     <div class="workspace">
       <div class="work-column">
         <section id="step-1" class="step-page" aria-labelledby="heading-1">
-          <div class="page-heading"><h1 id="heading-1" tabindex="-1">記錄今天的運動</h1><p>加入今天完成的項目，重量與時間會自動加總。</p></div>
+          <div class="page-heading"><h1 id="heading-1" tabindex="-1">記錄今天的運動</h1><p>加入今天完成的項目，重量和分鐘數會自動加總。</p></div>
           <form id="workout-form" class="panel form-panel">
             <div class="field-grid basic-fields">
               <label class="field"><span>運動日期</span><input id="workout-date" type="date" min="0001-01-01" max="9999-12-31" required></label>
@@ -332,12 +336,11 @@ const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const icon = (name) => `<svg aria-hidden="true"><use href="#${name}"/></svg>`;
 const STORAGE_KEY = 'stride-studio-workouts-v1';
 
-const fieldSports = ['登山', '跑步', '健走', '單車', '籃球', '羽球', '排球', '網球', '游泳'];
 const categories = {
   weights: { name: '重量訓練', icon: 'dumbbell', items: ['手肩', '背部', '胸部', '腿臀', '核心'], kind: 'weight', label: '部位' },
   cardio: { name: '有氧訓練', icon: 'heart', items: ['跑步機', '橢圓機', '腳踏車', '爬坡機'], kind: 'time', label: '器材' },
-  ball: { name: '球類訓練', icon: 'ball', items: ['籃球', '羽球', '排球', '網球', ...fieldSports.filter((sport) => !['籃球', '羽球', '排球', '網球'].includes(sport))], kind: 'outdoor', label: '項目' },
-  outdoor: { name: '戶外運動', icon: 'mountain', items: fieldSports, kind: 'outdoor', label: '項目' },
+  ball: { name: '球類訓練', icon: 'ball', items: ['籃球', '羽球', '排球', '網球'], kind: 'outdoor', label: '項目' },
+  outdoor: { name: '戶外運動', icon: 'mountain', items: ['登山', '跑步', '健走', '單車', '游泳'], kind: 'outdoor', label: '項目' },
   other: { name: '自行填寫', icon: 'edit', kind: 'other' },
 };
 
@@ -348,7 +351,9 @@ const layouts = {
 };
 
 const numberFormat = new Intl.NumberFormat('zh-TW', { maximumFractionDigits: 2 });
-const blankRow = (category) => ({ category, item: '', custom: '', weight: '', reps: '', difficulty: '', minutes: '', notes: '' });
+const blankRow = (category) => ({ category, item: '', custom: '', weight: '', reps: '', sets: '', difficulty: '', minutes: '', notes: '' });
+const weightSets = (row) => row.sets ?? '1';
+const weightSubtotal = (row) => Number(row.weight) * Number(row.reps) * Number(weightSets(row));
 const state = {
   step: 1, reachable: 1, activeId: null, category: 'weights', rows: [blankRow('weights')],
   photo: null, photoUrl: '', photoRequest: 0, photoLoading: false, layout: 'classic', tone: 'light',
@@ -368,6 +373,7 @@ const artwork = $('#artwork');
 const dragBoxes = { title: $('#title-drag'), stats: $('#stats-drag') };
 const canvasFont = '"Noto Sans TC", "Microsoft JhengHei", "PingFang TC", sans-serif';
 const numberFont = 'Bahnschrift, "Arial Narrow", "Noto Sans TC", "Microsoft JhengHei", sans-serif';
+const nameTagWidth = 54;
 let storageWarning = false;
 let noticeTimer = 0;
 let frame = 0;
@@ -497,15 +503,17 @@ function textInput(key, placeholder, required = false) {
 function rowFields(category) {
   if (category.kind === 'other') return field('運動內容', '<textarea data-key="custom" placeholder="例如：伸展與活動度練習" maxlength="300" required></textarea>');
   const options = category.items.map((item) => `<option>${item}</option>`).join('');
-  const select = `<select data-key="item" required><option value="">選擇${category.label}</option>${options}<option value="custom">自填</option></select>`;
+  const customOption = category === categories.ball ? '' : '<option value="custom">自填</option>';
+  const select = `<select data-key="item" required><option value="">選擇${category.label}</option>${options}${customOption}</select>`;
   const item = field(category.label, select);
   const custom = field(`自填${category.label}`, textInput('custom', `輸入${category.label}`), { wide: true, custom: true });
   if (category.kind === 'weight') {
-    return item + field('重量 (kg)', '<input type="number" data-key="weight" inputmode="decimal" min="0" step="any" placeholder="例如 40" required>')
-      + field('次數', '<input type="number" data-key="reps" inputmode="numeric" min="1" step="1" placeholder="例如 4" required>') + custom;
+    return item + custom + field('重量 (kg)', '<input type="number" data-key="weight" inputmode="decimal" min="0" step="any" placeholder="例如 40" required>')
+      + field('次數', '<input type="number" data-key="reps" inputmode="numeric" min="1" step="1" placeholder="例如 4" required>')
+      + field('組數', '<input type="number" data-key="sets" inputmode="numeric" min="1" step="1" placeholder="例如 3" required>');
   }
   const difficulty = field('難度', textInput('difficulty', '例如：中等', true));
-  const minutes = field('時間 (分鐘)', '<input type="number" data-key="minutes" inputmode="decimal" min="0.01" step="any" placeholder="例如 25" required>');
+  const minutes = field('分鐘', '<input type="number" data-key="minutes" inputmode="decimal" min="0.01" step="any" placeholder="例如 25" required>');
   const notes = category.kind === 'outdoor' ? field('備註 <small>選填</small>', '<input type="text" data-key="notes" maxlength="160" placeholder="例如：操場慢跑">', { wide: true }) : '';
   return item + difficulty + minutes + custom + notes;
 }
@@ -531,7 +539,15 @@ function renderRows() {
   }).join('');
   for (const element of activityList.children) {
     const row = state.rows[Number(element.dataset.row)];
-    for (const control of $$('[data-key]', element)) control.value = row[control.dataset.key];
+    for (const control of $$('[data-key]', element)) {
+      const { key } = control.dataset;
+      const value = key === 'sets' ? weightSets(row) : row[key];
+      if (key === 'item' && value && !Array.from(control.options).some((option) => option.value === value)) {
+        const label = value === 'custom' ? '自填' : value;
+        control.add(new Option(`${label}（舊紀錄）`, value));
+      }
+      control.value = value;
+    }
     updateCustomControl(element, row);
   }
   for (const option of $$('button', categoryList)) option.setAttribute('aria-pressed', String(option.dataset.category === state.category));
@@ -591,7 +607,14 @@ function validNumber(value) {
 function completeRow(row) {
   const kind = categories[row.category]?.kind;
   if (!kind || !itemLabel(row)) return false;
-  if (kind === 'weight') return validNumber(row.weight) && Number(row.weight) >= 0 && Number.isSafeInteger(Number(row.reps)) && Number(row.reps) >= 1 && Number.isFinite(Number(row.weight) * Number(row.reps));
+  if (kind === 'weight') {
+    const reps = Number(row.reps);
+    const sets = Number(weightSets(row));
+    return validNumber(row.weight) && Number(row.weight) >= 0
+      && Number.isSafeInteger(reps) && reps >= 1
+      && Number.isSafeInteger(sets) && sets >= 1
+      && Number.isFinite(weightSubtotal(row));
+  }
   if (kind === 'other') return true;
   return Boolean(row.difficulty.trim() && validNumber(row.minutes) && Number(row.minutes) >= 0.01 && Number.isSafeInteger(Math.round(Number(row.minutes) * 60)));
 }
@@ -610,7 +633,7 @@ function summarize(rows) {
     else activityNames.add(category.name);
     if (category.kind === 'weight') {
       hasWeight = true;
-      weight += Number(row.weight) * Number(row.reps);
+      weight += weightSubtotal(row);
     } else if (category.kind !== 'other') {
       hasTime = true;
       minutes += Number(row.minutes);
@@ -621,14 +644,6 @@ function summarize(rows) {
   return { weight, minutes, hasWeight, hasTime, count: complete.length, title, activityNames: [...activityNames], customActivities };
 }
 
-function timeParts(minutes) {
-  const totalMinutes = Math.round(minutes);
-  const hours = Math.floor(totalMinutes / 60);
-  const parts = [String(totalMinutes % 60), 'min'];
-  if (hours) parts.unshift(String(hours), 'h');
-  return parts;
-}
-
 function cardContent() {
   const summary = summarize(state.rows);
   const usingExample = !summary.count && !state.photo;
@@ -637,11 +652,12 @@ function cardContent() {
   const title = name ? '' : usingExample ? '戶外運動' : defaultTitle;
   const stats = [];
   if (summary.hasWeight) stats.push(['Total Weight', [numberFormat.format(summary.weight), 'kg']]);
-  if (summary.hasTime || usingExample) stats.push(['Total Time', timeParts(usingExample ? 42 : summary.minutes)]);
+  if (summary.hasTime || usingExample) stats.push(['Total Minutes', [numberFormat.format(usingExample ? 42 : summary.minutes), 'min']]);
   const activityNames = usingExample ? ['戶外運動'] : summary.activityNames;
   const activities = summary.customActivities.slice();
   if (activityNames.length) activities.unshift(activityNames.join('、'));
-  return { title, name, date: (dateInput.value || today()).replaceAll('-', '.'), stats, activities };
+  const [year, month, day] = (dateInput.value || today()).split('-');
+  return { title, name, date: `${month}.${day}.${year}`, stats, activities };
 }
 
 function exportRecords() {
@@ -650,12 +666,13 @@ function exportRecords() {
     showNotice(storageWarning ? '目前無法讀取瀏覽器的紀錄。' : '目前沒有可下載的紀錄。');
     return;
   }
-  const lines = [['日期', '名稱', '運動分類', '項目', '重量 (kg)', '次數', '項目合計重量 (kg)', '難度', '時間 (分鐘)', '備註']];
+  const lines = [['日期', '名稱', '運動分類', '項目', '重量 (kg)', '次數', '項目合計重量 (kg)', '難度', '分鐘', '備註', '組數']];
   for (const record of records) {
     for (const row of record.rows.filter(completeRow)) {
       const category = categories[row.category];
-      const subtotal = category.kind === 'weight' ? Number((Number(row.weight) * Number(row.reps)).toPrecision(15)) : '';
-      lines.push([record.date, record.name, category.name, itemLabel(row), row.weight, row.reps, subtotal, row.difficulty, row.minutes, row.notes]);
+      const subtotal = category.kind === 'weight' ? Number(weightSubtotal(row).toPrecision(15)) : '';
+      const sets = category.kind === 'weight' ? weightSets(row) : '';
+      lines.push([record.date, record.name, category.name, itemLabel(row), row.weight, row.reps, subtotal, row.difficulty, row.minutes, row.notes, sets]);
     }
   }
   const quote = (value) => {
@@ -855,9 +872,14 @@ function measureActivities(activities) {
 
 const clamp = (n, min, max) => Math.max(min, Math.min(n, max));
 
+function maxBlockX(blockWidth) {
+  const rightMargin = nameInput.value.trim() ? nameTagWidth + 8 : 44;
+  return width - blockWidth - rightMargin;
+}
+
 function blockBounds(key, size, defaultPoint) {
   const point = state.positions[key] ?? defaultPoint;
-  return { x: clamp(point[0], 45, width - size.width - 44), y: clamp(point[1], 40, height - size.height - 42), ...size };
+  return { x: clamp(point[0], 45, maxBlockX(size.width)), y: clamp(point[1], 40, height - size.height - 42), ...size };
 }
 
 function placeDragBox(key, bounds) {
@@ -869,32 +891,30 @@ function placeDragBox(key, bounds) {
   node.style.height = `${(bounds.height + 25) / height * 100}%`;
 }
 
-function washAround(bounds, darkText) {
-  const color = darkText ? '249,246,237' : '9,16,18';
-  const gradient = context.createRadialGradient(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2, 20,
-    bounds.x + bounds.width / 2, bounds.y + bounds.height / 2, Math.max(bounds.width * .9, bounds.height * .92) + 115);
-  gradient.addColorStop(0, `rgba(${color},${darkText ? .61 : .59})`);
-  gradient.addColorStop(.62, `rgba(${color},.33)`);
-  gradient.addColorStop(1, `rgba(${color},0)`);
-  context.fillStyle = gradient;
-  context.fillRect(0, 0, width, height);
-}
-
 function drawNameTag(name, darkText) {
   if (!name) return;
-  const tagWidth = 44;
-  const padding = 14;
+  const x = width - nameTagWidth;
+  const y = height - 161;
+  const padding = 16;
   const maxTextWidth = 820;
-  textFont(29, 850);
-  const tagLength = Math.min(context.measureText(name).width, maxTextWidth) + padding * 2;
+
   context.save();
-  context.translate(width - tagWidth / 2, height - 145);
-  context.rotate(-Math.PI / 2);
+  textFont(36, 850);
+  const textWidth = Math.min(context.measureText(name).width, maxTextWidth);
   context.fillStyle = darkText ? '#ffffffeb' : '#101717eb';
-  context.fillRect(0, -tagWidth / 2, tagLength, tagWidth);
-  context.fillStyle = darkText ? '#101717' : '#ffffff';
+  context.shadowColor = 'rgba(0, 0, 0, 0.45)';
+  context.shadowBlur = 9;
+  context.shadowOffsetX = -5;
+  context.shadowOffsetY = 5;
+  context.fillRect(x, y - textWidth - padding, nameTagWidth, textWidth + padding * 2);
+  context.restore();
+
+  context.save();
+  context.translate(x + nameTagWidth / 2, y);
+  context.rotate(-Math.PI / 2);
+  textFont(36, 850);
   context.textBaseline = 'middle';
-  context.fillText(name, padding, 0, maxTextWidth);
+  context.fillText(name, 0, 0, maxTextWidth);
   context.restore();
 }
 
@@ -902,13 +922,19 @@ function draw() {
   const { title, name, date, stats, activities } = cardContent();
   const layout = layouts[state.layout];
   const darkText = state.tone === 'dark';
+  const dateFont = 'Arial, sans-serif';
+  const dateFontSize = 56;
+  const dateFontWeight = 700;
+  const dateWidthScale = 0.64;
   const lines = titleLines(title, 834);
   textFont(79, 850);
   const lineWidths = lines.map((line) => context.measureText(line).width);
-  textFont(41, 500);
-  const titleWidth = Math.max(...lineWidths, context.measureText(date).width);
+  textFont(dateFontSize, dateFontWeight, dateFont);
+  const dateWidth = context.measureText(date).width * dateWidthScale;
+  const titleWidth = Math.max(...lineWidths, dateWidth);
   const dateOffset = lines.length ? lines.length * 87 + 9 : 0;
-  const titleBounds = blockBounds('title', { width: titleWidth, height: dateOffset + 57 }, layout.title);
+  const titleBounds = blockBounds('title', { width: titleWidth, height: dateOffset + dateFontSize + 16 }, layout.title);
+  const dateY = titleBounds.y + dateOffset;
   const statsSize = statsMeasure(stats, layout.horizontal);
   const activitySize = measureActivities(activities);
   const activityOffset = statsSize.height + (stats.length && activities.length ? 16 : 0);
@@ -919,15 +945,17 @@ function draw() {
   currentBounds = { title: titleBounds, stats: statsBounds };
 
   drawPhoto();
-  washAround(titleBounds, darkText);
-  washAround(statsBounds, darkText);
   context.fillStyle = darkText ? '#101717' : '#ffffff';
   context.textBaseline = 'top';
   context.textAlign = 'left';
   textFont(79, 850);
   lines.forEach((line, index) => context.fillText(line, titleBounds.x, titleBounds.y + index * 87));
-  textFont(41, 500);
-  context.fillText(date, titleBounds.x, titleBounds.y + dateOffset);
+  context.save();
+  context.translate(titleBounds.x, dateY);
+  context.scale(dateWidthScale, 1);
+  textFont(dateFontSize, dateFontWeight, dateFont);
+  context.fillText(date, 0, 0);
+  context.restore();
 
   if (layout.stripes) {
     context.beginPath();
@@ -975,7 +1003,7 @@ function draw() {
 
 function moveBlock(key, x, y) {
   const bounds = currentBounds[key];
-  state.positions[key] = [clamp(x, 45, width - bounds.width - 44), clamp(y, 40, height - bounds.height - 42)];
+  state.positions[key] = [clamp(x, 45, maxBlockX(bounds.width)), clamp(y, 40, height - bounds.height - 42)];
   invalidateOutput();
   updateSteps();
   scheduleDraw();
