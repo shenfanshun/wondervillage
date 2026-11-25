@@ -1,0 +1,1163 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#404040">
+  <meta name="description" content="記錄運動、選取照片，製作可下載的運動分享圖。">
+  <title>步跡｜運動分享圖</title>
+  <style>
+:root {
+  color-scheme: dark;
+  font-family: 'Noto Sans TC', 'Microsoft JhengHei', 'PingFang TC', system-ui, sans-serif;
+  color: var(--ink);
+  background: #404040;
+  font-size: 16px;
+  --ink: #f1f1f1;
+  --muted: #b3b3b3;
+  --accent: #ff9586;
+  --accent-hover: #942a22;
+  --accent-tint: #35201e;
+  --line: #303030;
+  --surface: #151515;
+  --input: #1e1e1e;
+  --raised: #252525;
+  --border: #424242;
+  --action: #ac352c;
+  --shadow: 0 2px 4px #0006;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; min-width: 280px; }
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: default; }
+button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+h1, h2, p, fieldset { margin: 0; }
+fieldset { border: 0; padding: 0; min-inline-size: 0; }
+legend { padding: 0; margin-bottom: 12px; font-weight: 750; }
+svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.icon-library { position: absolute; width: 0; height: 0; overflow: hidden; }
+.shell { width: min(1168px, calc(100% - 64px)); margin-inline: auto; }
+.site-header { background: var(--surface); border-bottom: 1px solid var(--line); }
+.topbar { min-height: 71px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.brand, .wordmark { display: flex; align-items: center; gap: 12px; white-space: nowrap; }
+.brand-mark { width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; background: var(--action); color: white; }
+.brand-mark svg { width: 25px; height: 25px; stroke-width: 2; }
+.wordmark { font-size: 1.35rem; font-weight: 850; letter-spacing: .035em; }
+.wordmark span { font-size: .875rem; font-weight: 550; color: var(--muted); letter-spacing: .025em; border-left: 1px solid var(--border); padding-left: 12px; }
+.button { display: inline-flex; gap: 8px; min-height: 43px; align-items: center; justify-content: center; padding: 9px 15px; border: 1px solid transparent; border-radius: 9px; font-weight: 740; font-size: .9375rem; line-height: 1.35; text-decoration: none; white-space: nowrap; transition: background-color .15s, border-color .15s; }
+.button svg { width: 18px; height: 18px; }
+.secondary { background: var(--input); border-color: var(--border); color: var(--ink); }
+.secondary:hover { background: var(--raised); border-color: #606060; }
+.primary { background: var(--action); color: #fff; padding-inline: 21px; min-height: 46px; }
+.primary:hover { background: var(--accent-hover); }
+.primary:disabled { background: var(--raised); color: #a0a0a0; }
+.export { font-size: .875rem; }
+.stepper { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; background: var(--surface); margin-top: 25px; border: 1px solid var(--line); border-radius: 13px; padding: 5px; box-shadow: var(--shadow); }
+.stepper button { display: flex; justify-content: center; align-items: center; gap: 10px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); min-height: 44px; font-size: .9375rem; font-weight: 650; padding: 4px; }
+.stepper button[aria-current] { background: var(--accent-tint); color: var(--accent); }
+.stepper button:hover:not(:disabled):not([aria-current]) { background: var(--raised); }
+.step-number { width: 25px; height: 25px; border-radius: 50%; background: var(--raised); color: var(--muted); display: grid; place-items: center; font-variant-numeric: tabular-nums; font-size: .8125rem; font-weight: 800; }
+[aria-current] .step-number { color: white; background: var(--action); }
+.step-number svg { width: 15px; height: 15px; }
+.workspace { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 27px; align-items: start; margin-top: 29px; }
+.work-column { min-width: 0; }
+.page-heading { margin: 0 0 20px 1px; }
+.page-heading h1 { font-size: clamp(1.9rem, 3.15vw, 2.65rem); line-height: 1.2; font-weight: 850; letter-spacing: -.037em; }
+.page-heading h1:focus { outline: none; }
+.page-heading p { margin-top: 10px; color: var(--muted); line-height: 1.6; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); }
+.form-panel { padding: 23px; }
+.field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+.basic-fields { margin-bottom: 23px; }
+.field { display: flex; flex-direction: column; min-width: 0; gap: 6px; }
+.field > span:first-child { font-size: .875rem; font-weight: 720; }
+.field small { color: var(--muted); font-size: .8125rem; font-weight: 500; margin-left: 4px; }
+input:not([type=file]), select, textarea { display: block; width: 100%; min-width: 0; min-height: 43px; background: var(--input); border: 1px solid var(--border); color: var(--ink); border-radius: 8px; padding: 8px 10px; }
+input[type=date] { width: 100%; min-width: 0; appearance: none; }
+#workout-date::-webkit-calendar-picker-indicator {
+  width: 18px;
+  height: 18px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round'%3E%3Crect x='3' y='5' width='18' height='16' rx='2'/%3E%3Cpath d='M16 3v4M8 3v4M3 10h18'/%3E%3C/svg%3E") center / 18px 18px no-repeat;
+  opacity: 1;
+  cursor: pointer;
+}
+select { appearance: none; padding-right: 26px; background: var(--input) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23b3b3b3' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 7px center; }
+textarea { resize: vertical; min-height: 63px; }
+input::placeholder, textarea::placeholder { color: #a6a6a6; opacity: 1; }
+.categories { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.category { min-height: 70px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 7px 4px; border: 1px solid var(--border); border-radius: 10px; background: var(--input); color: var(--ink); font-size: .875rem; font-weight: 750; white-space: nowrap; }
+.category:hover { background: var(--raised); }
+.category[aria-pressed=true] { background: var(--accent-tint); border-color: #bc655b; color: var(--accent); }
+.category svg { width: 22px; height: 22px; }
+.section-divider { border-top: 1px solid var(--line); margin: 17px 0; }
+.activities-header { display: flex; gap: 12px; justify-content: space-between; align-items: baseline; margin-bottom: 9px; }
+.activities-header h2, .position-settings h2 { font-size: 1rem; font-weight: 800; }
+.activities-header span { font-size: .8125rem; color: var(--muted); }
+.activities { display: grid; gap: 9px; }
+.activity { background: #101010; border: 1px solid var(--line); border-radius: 11px; padding: 10px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: start; }
+.activity-fields { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) minmax(0, .9fr); gap: 8px; }
+.activity[data-category=other] .activity-fields { grid-template-columns: 1fr; }
+.activity .wide { grid-column: 1 / -1; }
+.activity .category-label { font-size: .8125rem; color: var(--accent); font-weight: 760; }
+.icon-button { border: 0; background: transparent; color: var(--muted); width: 34px; height: 42px; display: grid; place-items: center; border-radius: 7px; padding: 0; margin-top: 21px; }
+.icon-button:hover { background: var(--accent-tint); color: var(--accent); }
+.icon-button:disabled { opacity: .45; }
+.icon-button svg { width: 17px; height: 17px; }
+.add { color: var(--accent); background: var(--surface); border: 1px dashed #a8645b; width: 100%; margin-top: 10px; min-height: 39px; }
+.add:hover { background: var(--accent-tint); }
+.form-actions { display: flex; gap: 12px; align-items: center; justify-content: space-between; }
+.actions-divider { margin-top: 19px; margin-bottom: 16px; }
+.privacy { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: .8125rem; line-height: 1.45; }
+.privacy svg { width: 15px; height: 15px; }
+.form-note { color: var(--accent); margin-top: 12px; font-size: .875rem; line-height: 1.55; }
+.history { margin-top: 13px; border-radius: 12px; }
+.history summary { color: var(--ink); display: flex; align-items: center; gap: 9px; min-height: 52px; list-style: none; cursor: pointer; padding: 0 15px; font-size: .875rem; font-weight: 740; }
+.history summary::-webkit-details-marker { display: none; }
+.history summary > svg { color: var(--muted); width: 17px; height: 17px; }
+.history summary .history-chevron { margin-left: auto; }
+.history[open] .history-chevron { transform: rotate(180deg); }
+.history summary small { font-size: .8125rem; font-weight: 500; color: var(--muted); }
+.history-list { padding: 0 14px 14px; }
+.empty { padding: 10px 2px 3px; border-top: 1px solid var(--line); color: var(--muted); font-size: .875rem; }
+.history-entry { padding: 10px 1px; display: flex; gap: 10px; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); }
+.history-entry strong, .history-entry small { display: block; overflow-wrap: anywhere; }
+.history-entry small { font-size: .8125rem; color: var(--muted); margin-top: 4px; }
+.history-entry .button { min-height: 37px; font-size: .8125rem; }
+.preview-panel { background: var(--surface); border-radius: 17px; border: 1px solid var(--line); padding: 17px 19px 14px; min-width: 0; position: sticky; top: 12px; }
+.preview-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 13px; }
+.preview-header h2 { display: flex; align-items: center; gap: 8px; font-size: .9375rem; font-weight: 800; }
+.preview-header h2 svg { width: 17px; height: 17px; }
+.ratio { color: var(--muted); background: var(--input); border: 1px solid var(--border); border-radius: 6px; padding: 4px 7px; font-size: .8125rem; white-space: nowrap; }
+.artwork { width: min(100%, 304px); margin-inline: auto; position: relative; isolation: isolate; border-radius: 10px; background: #000; overflow: hidden; box-shadow: 0 0 0 1px var(--line), 0 9px 24px #0006; aspect-ratio: 9/16; }
+.artwork canvas { display: block; width: 100%; height: auto; }
+.preview-note { text-align: center; color: var(--muted); margin-top: 11px; font-size: .8125rem; line-height: 1.45; }
+.drag-box { position: absolute; border: 1px dashed #fff; background: #19201e14; box-shadow: 0 0 0 1px #18231d80; color: white; border-radius: 4px; padding: 0; min-width: 26px; min-height: 24px; cursor: grab; touch-action: none; }
+.drag-box:hover, .drag-box:focus-visible { background: #19201e34; }
+.drag-box:active { cursor: grabbing; }
+.drag-box svg { position: absolute; right: 3px; top: 3px; width: 17px; height: 17px; background: #1c2523c7; padding: 2px; border-radius: 3px; }
+.dropzone { width: 100%; min-height: 230px; display: flex; flex-direction: column; gap: 10px; justify-content: center; align-items: center; padding: 18px; background: var(--input); border: 1.5px dashed #6a6a6a; color: var(--ink); border-radius: 13px; text-align: center; }
+.dropzone:hover, .dropzone.is-over { background: var(--accent-tint); border-color: var(--accent); }
+.dropzone > strong { font-size: 1.125rem; }
+.dropzone > span:last-child, .photo-status, .position-settings p, .finish-panel > p { color: var(--muted); font-size: .875rem; line-height: 1.55; }
+.upload-icon { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 12px; color: var(--accent); background: var(--accent-tint); }
+.upload-icon svg { width: 24px; height: 24px; }
+.photo-status { margin-top: 12px; overflow-wrap: anywhere; }
+.photo-status.error { color: var(--accent); }
+.layout-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
+.layout-choice { background: var(--input); min-width: 0; color: var(--ink); padding: 8px 5px; font-size: .875rem; font-weight: 750; border-radius: 9px; border: 1px solid var(--border); display: grid; justify-items: center; gap: 6px; }
+.layout-choice:hover { background: var(--raised); }
+.layout-choice[aria-pressed=true], .tone-options [aria-pressed=true] { background: var(--accent-tint); border-color: #bc655b; color: var(--accent); }
+.layout-thumbnail { width: 41px; height: 58px; background: #000; box-shadow: 0 0 0 1px var(--border); border-radius: 4px; position: relative; }
+.layout-thumbnail::before, .layout-thumbnail::after { content: ''; position: absolute; left: 5px; height: 7px; width: 15px; background: linear-gradient(white 0 2px, transparent 2px 4px, #fffd 4px 5px, transparent 5px); }
+.layout-thumbnail::before { top: 7px; }
+.layout-thumbnail::after { bottom: 5px; width: 11px; height: 12px; background: repeating-linear-gradient(white 0 2px, transparent 2px 5px); }
+[data-layout=top] .layout-thumbnail::before { top: auto; bottom: 5px; }
+[data-layout=top] .layout-thumbnail::after { top: 6px; bottom: auto; }
+[data-layout=strip] .layout-thumbnail::before { top: auto; bottom: 15px; }
+[data-layout=strip] .layout-thumbnail::after { width: 28px; height: 6px; bottom: 4px; background: repeating-linear-gradient(90deg, #fff 0 6px, transparent 6px 11px); }
+.tone-options { display: flex; gap: 9px; }
+.tone-dot { border: 1px solid #999; width: 15px; height: 15px; border-radius: 50%; }
+.tone-dot.light { background: #fff; }
+.tone-dot.dark { background: #101717; }
+.position-settings { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.position-settings p { margin-top: 5px; }
+.finish-panel > h2 { margin: 14px 0 7px; font-size: 1.25rem; }
+.finish-panel > a { margin-top: 17px; }
+.done-icon { color: #9fd6ae; background: #1d3224; }
+.notice { position: fixed; z-index: 2; left: 50%; bottom: 20px; transform: translateX(-50%); width: max-content; max-width: calc(100% - 26px); background: #292929; color: #fff; border-radius: 9px; padding: 11px 16px; box-shadow: 0 4px 16px #0008; font-size: .875rem; }
+.footer { display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--muted); font-size: .8125rem; padding: 24px 0 22px; }
+.footer svg { width: 15px; height: 15px; }
+
+@media (max-width: 1000px) {
+  .shell { width: calc(100% - 40px); }
+  .workspace { gap: 16px; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); }
+  .form-panel { padding: 16px; }
+  .preview-panel { padding-inline: 12px; }
+}
+@media (max-width: 735px) {
+  .shell { width: calc(100% - 28px); }
+  .topbar { min-height: 61px; }
+  .brand, .wordmark { gap: 8px; }
+  .brand-mark { width: 34px; height: 34px; border-radius: 9px; }
+  .brand-mark svg { width: 21px; height: 21px; }
+  .wordmark { font-size: 1.125rem; }
+  .wordmark span { display: none; }
+  .export { min-height: 38px; padding: 7px 10px; }
+  .stepper { margin-top: 15px; gap: 2px; padding: 3px; }
+  .stepper button { min-height: 48px; flex-direction: column; gap: 2px; font-size: .8125rem; }
+  .step-number { width: 20px; height: 20px; font-size: .75rem; }
+  .workspace { grid-template-columns: minmax(0, 1fr); gap: 17px; margin-top: 22px; }
+  .page-heading { margin-bottom: 15px; }
+  .page-heading p { margin-top: 7px; }
+  .preview-panel { position: static; }
+  .artwork { width: min(100%, 304px); }
+}
+@media (max-width: 385px) {
+  .shell { width: calc(100% - 20px); }
+  .form-panel { padding: 11px; }
+  .categories, .activity-fields { gap: 5px; }
+  .category { font-size: .8125rem; }
+  .activity { padding: 6px; gap: 4px; }
+  .activity input, .activity select { padding-left: 6px; }
+  .activity select { padding-right: 18px; background-position: right 3px center; background-size: 13px; }
+  .icon-button { width: 26px; }
+  .form-actions { gap: 7px; }
+  .primary { padding-inline: 13px; }
+}
+
+</style>
+</head>
+<body>
+  <svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="pulse" viewBox="0 0 24 24"><path d="M2 13h5l3-8 4 14 3-6h5"/></symbol>
+    <symbol id="download" viewBox="0 0 24 24"><path d="M12 3v12m-4-4 4 4 4-4M5 16v4h14v-4"/></symbol>
+    <symbol id="lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/></symbol>
+    <symbol id="dumbbell" viewBox="0 0 24 24"><path d="M7 6v12m-4-9v6m14-9v12m4-9v6M7 12h10M1 12h2m18 0h2"/></symbol>
+    <symbol id="heart" viewBox="0 0 24 24"><path d="M20.8 4.6a5.4 5.4 0 0 0-7.7 0L12 5.7l-1.1-1.1a5.4 5.4 0 0 0-7.7 7.6l1.1 1.1L12 21l7.7-7.7 1.1-1.1a5.4 5.4 0 0 0 0-7.6Z"/><path d="M3 11h5l2-3 3 6 2-3h6"/></symbol>
+    <symbol id="ball" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3v18M5.5 5.5a9 9 0 0 1 0 13m13-13a9 9 0 0 0 0 13"/></symbol>
+    <symbol id="mountain" viewBox="0 0 24 24"><path d="m2 20 8-14 4 7 2.5-4L23 20ZM7.5 10.4l2.5 2.1 2.5-2.1"/></symbol>
+    <symbol id="edit" viewBox="0 0 24 24"><path d="m14 5 5 5M4 20l4.5-.9L20 7.6a2 2 0 0 0 0-2.8l-.8-.8a2 2 0 0 0-2.8 0L4.9 15.5Z"/></symbol>
+    <symbol id="plus" viewBox="0 0 24 24"><path d="M12 5v14m-7-7h14"/></symbol>
+    <symbol id="trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v5m4-5v5"/></symbol>
+    <symbol id="image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></symbol>
+    <symbol id="check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="history" viewBox="0 0 24 24"><path d="M3 11a9 9 0 1 1 2.5 7M3 5v6h6m3-4v5l3 2"/></symbol>
+    <symbol id="chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="move" viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M9 6l3-3 3 3m-6 12 3 3 3-3M6 9l-3 3 3 3m12-6 3 3-3 3"/></symbol>
+  </svg>
+  <header class="site-header">
+    <div class="shell topbar">
+      <div class="brand"><span class="brand-mark"><svg><use href="#pulse"/></svg></span><span class="wordmark">步跡<span>運動分享圖</span></span></div>
+      <button class="button secondary export" id="export-data" type="button"><svg><use href="#download"/></svg><span>下載運動數據</span></button>
+    </div>
+  </header>
+  <main class="shell">
+    <nav class="stepper" aria-label="製作進度">
+      <button type="button" data-step="1" aria-current="step"><span class="step-number">1</span><span>運動紀錄</span></button>
+      <button type="button" data-step="2" disabled><span class="step-number">2</span><span>選擇照片</span></button>
+      <button type="button" data-step="3" disabled><span class="step-number">3</span><span>調整排版</span></button>
+      <button type="button" data-step="4" disabled><span class="step-number">4</span><span>下載圖片</span></button>
+    </nav>
+
+    <div class="workspace">
+      <div class="work-column">
+        <section id="step-1" class="step-page" aria-labelledby="heading-1">
+          <div class="page-heading"><h1 id="heading-1" tabindex="-1">記錄今天的運動</h1><p>加入今天完成的項目，重量與時間會自動加總。</p></div>
+          <form id="workout-form" class="panel form-panel">
+            <div class="field-grid basic-fields">
+              <label class="field"><span>運動日期</span><input id="workout-date" type="date" min="0001-01-01" max="9999-12-31" required></label>
+              <label class="field"><span>名稱 <small>選填</small></span><input id="workout-name" type="text" maxlength="40"></label>
+            </div>
+            <fieldset class="categories-group"><legend>運動分類</legend><div id="categories" class="categories"></div></fieldset>
+            <div class="section-divider"></div>
+            <div class="activities-header"><h2>運動項目</h2><span id="row-count"></span></div>
+            <div id="activities" class="activities"></div>
+            <button class="button add" id="add-row" type="button"><svg><use href="#plus"/></svg>新增項目</button>
+            <p class="form-note" id="form-note" role="status" hidden></p>
+            <div class="section-divider actions-divider"></div>
+            <div class="form-actions"><p class="privacy"><svg><use href="#lock"/></svg>紀錄留在此瀏覽器，保留近 15 日</p><button class="button primary" type="submit">儲存並選照片</button></div>
+          </form>
+          <details class="panel history" id="history">
+            <summary><svg><use href="#history"/></svg><span>最近的運動紀錄</span><small id="history-count"></small><svg class="history-chevron"><use href="#chevron"/></svg></summary>
+            <div id="history-list" class="history-list"></div>
+          </details>
+        </section>
+
+        <section id="step-2" class="step-page" aria-labelledby="heading-2" hidden>
+          <div class="page-heading"><h1 id="heading-2" tabindex="-1">選一張運動照片</h1><p>從相簿選一張照片，當作分享圖的背景。</p></div>
+          <div class="panel form-panel">
+            <input id="photo-input" type="file" accept="image/*" hidden>
+            <button id="choose-photo" class="dropzone" type="button"><span class="upload-icon"><svg><use href="#image"/></svg></span><strong id="photo-button-title">從相簿選照片</strong><span>也可以把照片拖曳到這裡</span></button>
+            <p id="photo-status" class="photo-status" role="status">支援瀏覽器可讀取的圖片，例如 JPG、PNG、WebP。</p>
+            <div class="section-divider actions-divider"></div>
+            <div class="form-actions"><button type="button" class="button secondary" data-back="1">返回紀錄</button><button type="button" class="button primary" id="photo-next" disabled>調整排版</button></div>
+          </div>
+        </section>
+
+        <section id="step-3" class="step-page" aria-labelledby="heading-3" hidden>
+          <div class="page-heading"><h1 id="heading-3" tabindex="-1">排出你的分享圖</h1><p>選擇版型，再拖曳預覽中的標題或數據調整位置。</p></div>
+          <div class="panel form-panel editor-panel">
+            <fieldset><legend>版型</legend><div class="layout-options" id="layouts"></div></fieldset>
+            <div class="section-divider"></div>
+            <fieldset><legend>文字顏色</legend><div class="tone-options" id="tones"><button class="button secondary" type="button" data-tone="light" aria-pressed="true"><span class="tone-dot light"></span>白字</button><button class="button secondary" type="button" data-tone="dark" aria-pressed="false"><span class="tone-dot dark"></span>黑字</button></div></fieldset>
+            <div class="section-divider"></div>
+            <div class="position-settings"><div><h2>文字位置</h2><p id="move-help">用手指或滑鼠拖曳，選取文字框後也可用方向鍵移動。</p></div><button class="button secondary" id="reset-position" type="button">重設位置</button></div>
+            <p id="render-status" class="form-note" role="status" hidden></p>
+            <div class="section-divider actions-divider"></div>
+            <div class="form-actions"><button type="button" class="button secondary" data-back="2">返回照片</button><button id="render-image" type="button" class="button primary">產生分享圖</button></div>
+          </div>
+        </section>
+
+        <section id="step-4" class="step-page" aria-labelledby="heading-4" hidden>
+          <div class="page-heading"><h1 id="heading-4" tabindex="-1">分享圖完成了</h1><p>下載圖片，就能分享這次的運動紀錄。</p></div>
+          <div class="panel form-panel finish-panel">
+            <span class="upload-icon done-icon"><svg><use href="#check"/></svg></span>
+            <h2>運動分享圖</h2><p>直式 PNG · 1080 × 1920 像素</p>
+            <a id="download-image" class="button primary" download><svg><use href="#download"/></svg>下載分享圖</a>
+            <div class="section-divider actions-divider"></div>
+            <div class="form-actions"><button type="button" class="button secondary" data-back="3">返回排版</button><button type="button" class="button secondary" id="start-over">新增運動紀錄</button></div>
+          </div>
+        </section>
+      </div>
+
+      <aside class="preview-panel" aria-labelledby="preview-heading">
+        <div class="preview-header"><h2 id="preview-heading"><svg><use href="#image"/></svg>分享圖預覽</h2><span class="ratio">9:16 直式</span></div>
+        <div class="artwork" id="artwork">
+          <canvas id="preview" width="1080" height="1920" role="img" aria-label="運動分享圖預覽"></canvas>
+          <button class="drag-box" id="title-drag" type="button" aria-label="移動標題和日期" aria-describedby="move-help" hidden><svg><use href="#move"/></svg></button>
+          <button class="drag-box" id="stats-drag" type="button" aria-label="移動運動數據" aria-describedby="move-help" hidden><svg><use href="#move"/></svg></button>
+        </div>
+        <p id="preview-note" class="preview-note">版面預覽，下一步可選擇背景照片</p>
+      </aside>
+    </div>
+    <p id="notice" class="notice" role="status" hidden></p>
+  </main>
+  <footer class="shell footer"><svg><use href="#lock"/></svg>照片與運動紀錄都在你的裝置上處理。</footer>
+<script>
+'use strict';
+
+const $ = (selector, root = document) => root.querySelector(selector);
+const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+const icon = (name) => `<svg aria-hidden="true"><use href="#${name}"/></svg>`;
+const STORAGE_KEY = 'stride-studio-workouts-v1';
+
+const fieldSports = ['登山', '跑步', '健走', '單車', '籃球', '羽球', '排球', '網球', '游泳'];
+const categories = {
+  weights: { name: '重量訓練', icon: 'dumbbell', items: ['手肩', '背部', '胸部', '腿臀', '核心'], kind: 'weight', label: '部位' },
+  cardio: { name: '有氧訓練', icon: 'heart', items: ['跑步機', '橢圓機', '腳踏車', '爬坡機'], kind: 'time', label: '器材' },
+  ball: { name: '球類訓練', icon: 'ball', items: ['籃球', '羽球', '排球', '網球', ...fieldSports.filter((sport) => !['籃球', '羽球', '排球', '網球'].includes(sport))], kind: 'outdoor', label: '項目' },
+  outdoor: { name: '戶外運動', icon: 'mountain', items: fieldSports, kind: 'outdoor', label: '項目' },
+  other: { name: '自行填寫', icon: 'edit', kind: 'other' },
+};
+
+const layouts = {
+  classic: { label: '左側經典', title: [92, 132], stats: [92, 1330], horizontal: false, stripes: true },
+  top: { label: '上方數據', title: [92, 1546], stats: [92, 138], horizontal: false, stripes: false },
+  strip: { label: '底部橫排', title: [92, 1358], stats: [92, 1570], horizontal: true, stripes: false },
+};
+
+const numberFormat = new Intl.NumberFormat('zh-TW', { maximumFractionDigits: 2 });
+const blankRow = (category) => ({ category, item: '', custom: '', weight: '', reps: '', difficulty: '', minutes: '', notes: '' });
+const state = {
+  step: 1, reachable: 1, activeId: null, category: 'weights', rows: [blankRow('weights')],
+  photo: null, photoUrl: '', photoRequest: 0, photoLoading: false, layout: 'classic', tone: 'light',
+  positions: {}, outputUrl: '', artworkVersion: 0, rendering: false,
+};
+
+const form = $('#workout-form');
+const dateInput = $('#workout-date');
+const nameInput = $('#workout-name');
+const activityList = $('#activities');
+const categoryList = $('#categories');
+const canvas = $('#preview');
+const context = canvas.getContext('2d');
+const width = canvas.width;
+const height = canvas.height;
+const artwork = $('#artwork');
+const dragBoxes = { title: $('#title-drag'), stats: $('#stats-drag') };
+const canvasFont = '"Noto Sans TC", "Microsoft JhengHei", "PingFang TC", sans-serif';
+const numberFont = 'Bahnschrift, "Arial Narrow", "Noto Sans TC", "Microsoft JhengHei", sans-serif';
+let storageWarning = false;
+let noticeTimer = 0;
+let frame = 0;
+let drag = null;
+let currentBounds = {};
+
+function today() {
+  const now = new Date();
+  const pad = (value) => String(value).padStart(2, '0');
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
+
+function dateLabel(value) {
+  const [year, month, day] = value.split('-');
+  return `${Number(year)} 年 ${Number(month)} 月 ${Number(day)} 日`;
+}
+
+function inRetention(date) {
+  const end = today();
+  const start = new Date(`${end}T00:00:00Z`);
+  start.setUTCDate(start.getUTCDate() - 14);
+  return date >= start.toISOString().slice(0, 10) && date <= end;
+}
+
+function showNotice(message) {
+  const notice = $('#notice');
+  notice.textContent = message;
+  notice.hidden = false;
+  clearTimeout(noticeTimer);
+  noticeTimer = setTimeout(() => { notice.hidden = true; }, 4500);
+}
+
+function readRecords() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw === null) return [];
+    const records = JSON.parse(raw);
+    if (!Array.isArray(records)) return [];
+    const recent = records.filter((record) => record && typeof record.date === 'string' && Array.isArray(record.rows) && inRetention(record.date));
+    if (recent.length !== records.length) localStorage.setItem(STORAGE_KEY, JSON.stringify(recent));
+    return recent.sort((a, b) => b.date.localeCompare(a.date) || (b.updatedAt ?? 0) - (a.updatedAt ?? 0));
+  } catch {
+    storageWarning = true;
+    return [];
+  }
+}
+
+function saveRecord() {
+  if (!inRetention(dateInput.value)) return 'outside';
+  try {
+    storageWarning = false;
+    const records = readRecords();
+    if (storageWarning) return 'unavailable';
+    const id = state.activeId ?? globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
+    const record = { id, date: dateInput.value, name: nameInput.value.trim(), rows: state.rows, updatedAt: Date.now() };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...records.filter((entry) => entry.id !== id), record]));
+    state.activeId = id;
+    return 'saved';
+  } catch {
+    storageWarning = true;
+    return 'unavailable';
+  }
+}
+
+function renderHistory() {
+  const list = $('#history-list');
+  const records = readRecords();
+  list.replaceChildren();
+  const days = new Set(records.map((record) => record.date)).size;
+  $('#history-count').textContent = days ? `${days} 日` : '';
+  if (!records.length) {
+    const empty = document.createElement('p');
+    empty.className = 'empty';
+    empty.textContent = storageWarning ? '目前無法讀取這個瀏覽器的紀錄。' : '目前沒有已儲存的紀錄。';
+    list.append(empty);
+    return;
+  }
+  for (const record of records) {
+    const entry = document.createElement('div');
+    entry.className = 'history-entry';
+    const summary = summarize(record.rows);
+    const detail = document.createElement('div');
+    const title = document.createElement('strong');
+    title.textContent = record.name || summary.title;
+    const date = document.createElement('small');
+    date.textContent = `${dateLabel(record.date)} · ${summary.count} 項運動`;
+    detail.append(title, date);
+    const load = document.createElement('button');
+    load.className = 'button secondary';
+    load.type = 'button';
+    load.textContent = '載入紀錄';
+    load.addEventListener('click', () => loadRecord(record));
+    entry.append(detail, load);
+    list.append(entry);
+  }
+}
+
+function loadRecord(record) {
+  state.activeId = record.id;
+  state.rows = record.rows.map((row) => ({ ...row }));
+  state.category = state.rows.at(-1)?.category ?? 'weights';
+  dateInput.value = record.date;
+  nameInput.value = record.name;
+  clearPhoto();
+  resetStyle();
+  updateFormNote('已載入紀錄。儲存時會更新這一筆。');
+  renderRows();
+  go(1);
+}
+
+function renderCategories() {
+  categoryList.innerHTML = Object.entries(categories).map(([key, category]) => `
+    <button type="button" class="category" data-category="${key}" aria-pressed="false">
+      ${icon(category.icon)}<span>${category.name}</span>
+    </button>`).join('');
+}
+
+function field(label, control, options = {}) {
+  return `<label class="field${options.wide ? ' wide' : ''}"${options.custom ? ' data-custom hidden' : ''}>
+    <span>${label}</span>${control}</label>`;
+}
+
+function textInput(key, placeholder, required = false) {
+  return `<input type="text" data-key="${key}" placeholder="${placeholder}" maxlength="40"${required ? ' required' : ''}>`;
+}
+
+function rowFields(category) {
+  if (category.kind === 'other') return field('運動內容', '<textarea data-key="custom" placeholder="例如：伸展與活動度練習" maxlength="300" required></textarea>');
+  const options = category.items.map((item) => `<option>${item}</option>`).join('');
+  const select = `<select data-key="item" required><option value="">選擇${category.label}</option>${options}<option value="custom">自填</option></select>`;
+  const item = field(category.label, select);
+  const custom = field(`自填${category.label}`, textInput('custom', `輸入${category.label}`), { wide: true, custom: true });
+  if (category.kind === 'weight') {
+    return item + field('重量 (kg)', '<input type="number" data-key="weight" inputmode="decimal" min="0" step="any" placeholder="例如 40" required>')
+      + field('次數', '<input type="number" data-key="reps" inputmode="numeric" min="1" step="1" placeholder="例如 4" required>') + custom;
+  }
+  const difficulty = field('難度', textInput('difficulty', '例如：中等', true));
+  const minutes = field('時間 (分鐘)', '<input type="number" data-key="minutes" inputmode="decimal" min="0.01" step="any" placeholder="例如 25" required>');
+  const notes = category.kind === 'outdoor' ? field('備註 <small>選填</small>', '<input type="text" data-key="notes" maxlength="160" placeholder="例如：操場慢跑">', { wide: true }) : '';
+  return item + difficulty + minutes + custom + notes;
+}
+
+function updateCustomControl(element, row) {
+  const custom = $('[data-custom]', element);
+  if (!custom) return;
+  const active = row.item === 'custom';
+  custom.hidden = !active;
+  $('input', custom).disabled = !active;
+  $('input', custom).required = active;
+}
+
+function renderRows() {
+  const showCategory = state.rows.length > 1;
+  activityList.innerHTML = state.rows.map((row, index) => {
+    const category = categories[row.category];
+    const label = showCategory ? `<span class="category-label wide">${category.name}</span>` : '';
+    return `<div class="activity" data-row="${index}" data-category="${row.category}">
+      <div class="activity-fields">${label}${rowFields(category)}</div>
+      <button type="button" class="icon-button" data-remove="${index}" aria-label="移除第 ${index + 1} 項" ${showCategory ? '' : 'disabled'}>${icon('trash')}</button>
+    </div>`;
+  }).join('');
+  for (const element of activityList.children) {
+    const row = state.rows[Number(element.dataset.row)];
+    for (const control of $$('[data-key]', element)) control.value = row[control.dataset.key];
+    updateCustomControl(element, row);
+  }
+  for (const option of $$('button', categoryList)) option.setAttribute('aria-pressed', String(option.dataset.category === state.category));
+  $('#row-count').textContent = `${state.rows.length} 項`;
+  scheduleDraw();
+}
+
+function updateFormNote(message = '') {
+  const note = $('#form-note');
+  note.textContent = message;
+  note.hidden = !message;
+}
+
+function formDateNote() {
+  return dateInput.value && !inRetention(dateInput.value) ? '這個日期超出近 15 日範圍，仍可製圖。' : '';
+}
+
+function markDirty() {
+  invalidateOutput();
+  state.reachable = 1;
+  updateSteps();
+  updateFormNote(formDateNote());
+  scheduleDraw();
+}
+
+function updateSteps() {
+  for (const button of $$('.stepper button')) {
+    const number = Number(button.dataset.step);
+    button.disabled = number > state.reachable;
+    if (number === state.step) button.setAttribute('aria-current', 'step');
+    else button.removeAttribute('aria-current');
+    $('.step-number', button).innerHTML = number < state.step ? icon('check') : number;
+  }
+}
+
+function go(step) {
+  state.step = step;
+  state.reachable = Math.max(state.reachable, step);
+  for (const page of $$('.step-page')) page.hidden = page.id !== `step-${step}`;
+  updateSteps();
+  artwork.classList.toggle('editing', step === 3);
+  $('#preview-note').textContent = step === 3 ? '拖曳兩個文字框，可分開調整位置' : state.photo ? '預覽你的分享圖' : '版面預覽，下一步可選擇背景照片';
+  draw();
+  $(`#heading-${step}`).focus({ preventScroll: true });
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
+
+function itemLabel(row) {
+  if (row.category === 'other' || row.item === 'custom') return row.custom.trim();
+  return row.item;
+}
+
+function validNumber(value) {
+  return value !== '' && Number.isFinite(Number(value));
+}
+
+function completeRow(row) {
+  const kind = categories[row.category]?.kind;
+  if (!kind || !itemLabel(row)) return false;
+  if (kind === 'weight') return validNumber(row.weight) && Number(row.weight) >= 0 && Number.isSafeInteger(Number(row.reps)) && Number(row.reps) >= 1 && Number.isFinite(Number(row.weight) * Number(row.reps));
+  if (kind === 'other') return true;
+  return Boolean(row.difficulty.trim() && validNumber(row.minutes) && Number(row.minutes) >= 0.01 && Number.isSafeInteger(Math.round(Number(row.minutes) * 60)));
+}
+
+function summarize(rows) {
+  let weight = 0;
+  let minutes = 0;
+  let hasWeight = false;
+  let hasTime = false;
+  const activityNames = new Set();
+  const customActivities = [];
+  const complete = rows.filter(completeRow);
+  for (const row of complete) {
+    const category = categories[row.category];
+    if (category.kind === 'other') customActivities.push(itemLabel(row));
+    else activityNames.add(category.name);
+    if (category.kind === 'weight') {
+      hasWeight = true;
+      weight += Number(row.weight) * Number(row.reps);
+    } else if (category.kind !== 'other') {
+      hasTime = true;
+      minutes += Number(row.minutes);
+    }
+  }
+  let title = activityNames.size === 1 && !customActivities.length ? activityNames.values().next().value : '運動紀錄';
+  if (!activityNames.size && customActivities.length) title = customActivities.length === 1 ? customActivities[0] : '自訂運動';
+  return { weight, minutes, hasWeight, hasTime, count: complete.length, title, activityNames: [...activityNames], customActivities };
+}
+
+function timeLabel(minutes) {
+  const totalSeconds = Math.round(minutes * 60);
+  const hours = Math.floor(totalSeconds / 3600);
+  const wholeMinutes = Math.floor(totalSeconds / 60) % 60;
+  const seconds = totalSeconds % 60;
+  return [hours ? `${hours} 小時` : '', wholeMinutes ? `${wholeMinutes} 分` : '', seconds ? `${seconds} 秒` : ''].filter(Boolean).join(' ') || '0 分';
+}
+
+function cardContent() {
+  const summary = summarize(state.rows);
+  const usingExample = !summary.count && !state.photo;
+  const defaultTitle = summary.customActivities.length && !summary.activityNames.length ? '運動紀錄' : summary.title;
+  const title = nameInput.value.trim() || (usingExample ? '戶外運動' : defaultTitle);
+  const stats = [];
+  if (summary.hasWeight) stats.push(['合計重量', numberFormat.format(summary.weight), 'kg']);
+  if (summary.hasTime || usingExample) stats.push(['總計時間', timeLabel(usingExample ? 42 : summary.minutes), '']);
+  const activityNames = usingExample ? ['戶外運動'] : summary.activityNames;
+  const activities = summary.customActivities.slice();
+  if (activityNames.length) activities.unshift(activityNames.join('、'));
+  return { title, date: dateLabel(dateInput.value || today()), stats, activities };
+}
+
+function exportRecords() {
+  const records = readRecords();
+  if (!records.length) {
+    showNotice(storageWarning ? '目前無法讀取瀏覽器的紀錄。' : '目前沒有可下載的紀錄。');
+    return;
+  }
+  const lines = [['日期', '名稱', '運動分類', '項目', '重量 (kg)', '次數', '項目合計重量 (kg)', '難度', '時間 (分鐘)', '備註']];
+  for (const record of records) {
+    for (const row of record.rows.filter(completeRow)) {
+      const category = categories[row.category];
+      const subtotal = category.kind === 'weight' ? Number((Number(row.weight) * Number(row.reps)).toPrecision(15)) : '';
+      lines.push([record.date, record.name, category.name, itemLabel(row), row.weight, row.reps, subtotal, row.difficulty, row.minutes, row.notes]);
+    }
+  }
+  const quote = (value) => {
+    let text = String(value ?? '');
+    if (/^[\t\r\n]|^\s*[=+\-@\uFF1D\uFF0B\uFF0D\uFF20]/u.test(text)) text = `'${text}`;
+    return `"${text.replaceAll('"', '""')}"`;
+  };
+  const csv = '\uFEFF' + lines.map((line) => line.map(quote).join(',')).join('\r\n');
+  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `步跡-運動紀錄-${today()}.csv`;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+}
+
+function photoStatus(message, error = false) {
+  const status = $('#photo-status');
+  status.textContent = message;
+  status.classList.toggle('error', error);
+}
+
+function invalidateOutput() {
+  state.artworkVersion += 1;
+  if (state.outputUrl) URL.revokeObjectURL(state.outputUrl);
+  state.outputUrl = '';
+  $('#download-image').removeAttribute('href');
+  state.reachable = Math.min(state.reachable, 3);
+}
+
+function clearPhoto() {
+  state.photoRequest += 1;
+  state.photoLoading = false;
+  state.photo = null;
+  if (state.photoUrl) URL.revokeObjectURL(state.photoUrl);
+  state.photoUrl = '';
+  $('#photo-button-title').textContent = '從相簿選照片';
+  $('#photo-next').disabled = true;
+  photoStatus('支援瀏覽器可讀取的圖片，例如 JPG、PNG、WebP。');
+  state.reachable = 1;
+  invalidateOutput();
+}
+
+async function openPhoto(file) {
+  if (!file) return;
+  const request = ++state.photoRequest;
+  const url = URL.createObjectURL(file);
+  const image = new Image();
+  state.photoLoading = true;
+  $('#photo-next').disabled = true;
+  state.reachable = Math.min(state.reachable, 2);
+  updateSteps();
+  photoStatus('正在載入照片…');
+  try {
+    image.src = url;
+    await image.decode();
+    if (!image.naturalWidth || !image.naturalHeight) throw new Error('Empty image');
+    if (request !== state.photoRequest) {
+      URL.revokeObjectURL(url);
+      return;
+    }
+    if (state.photoUrl) URL.revokeObjectURL(state.photoUrl);
+    state.photo = image;
+    state.photoUrl = url;
+    state.positions = {};
+    invalidateOutput();
+    $('#photo-button-title').textContent = '更換照片';
+    $('#preview-note').textContent = '預覽你的分享圖';
+    photoStatus(`已選擇 ${file.name}，照片會以滿版方式裁切。`);
+    scheduleDraw();
+  } catch {
+    URL.revokeObjectURL(url);
+    if (request === state.photoRequest) {
+      const suffix = state.photo ? '目前仍使用上一張照片。' : '請選擇 JPG、PNG 或 WebP。';
+      photoStatus(`這個瀏覽器無法讀取該圖片。${suffix}`, true);
+    }
+  } finally {
+    if (request === state.photoRequest) {
+      state.photoLoading = false;
+      $('#photo-next').disabled = !state.photo;
+    }
+  }
+}
+
+function resetStyle() {
+  state.layout = 'classic';
+  state.tone = 'light';
+  state.positions = {};
+  updateStyleButtons();
+}
+
+function updateStyleButtons() {
+  for (const option of $$('#layouts button')) option.setAttribute('aria-pressed', String(option.dataset.layout === state.layout));
+  for (const option of $$('#tones button')) option.setAttribute('aria-pressed', String(option.dataset.tone === state.tone));
+}
+
+function scheduleDraw() {
+  if (!frame) frame = requestAnimationFrame(() => { frame = 0; draw(); });
+}
+
+function drawPhoto() {
+  const photo = state.photo;
+  if (photo?.naturalWidth && photo.naturalHeight) {
+    const scale = Math.max(width / photo.naturalWidth, height / photo.naturalHeight);
+    const w = photo.naturalWidth * scale;
+    const h = photo.naturalHeight * scale;
+    context.drawImage(photo, (width - w) / 2, (height - h) / 2, w, h);
+    return;
+  }
+  context.fillStyle = '#000';
+  context.fillRect(0, 0, width, height);
+}
+
+function textFont(size, weight, family = canvasFont) {
+  context.font = `${weight} ${size}px ${family}`;
+}
+
+function trimText(text, limit) {
+  if (context.measureText(text).width <= limit) return text;
+  const letters = Array.from(text);
+  while (letters.length && context.measureText(letters.join('') + '…').width > limit) letters.pop();
+  return letters.join('') + '…';
+}
+
+function titleLines(title, limit) {
+  textFont(79, 850);
+  const letters = Array.from(title.replace(/\s+/g, ' '));
+  let first = '';
+  while (letters.length && context.measureText(first + letters[0]).width <= limit) first += letters.shift();
+  return letters.length ? [first, trimText(letters.join('').trimStart(), limit)] : [first];
+}
+
+function statsMeasure(stats, horizontal) {
+  const columns = stats.length;
+  if (!columns) return { measures: [], width: 0, height: 0 };
+  const available = horizontal ? Math.min(270, Math.floor(895 / columns) - 36) : 810;
+  const valueSize = horizontal ? 66 : 97;
+  const measures = stats.map(([label, value, unit]) => {
+    textFont(valueSize, 850, numberFont);
+    const unitSize = horizontal ? 32 : 48;
+    const naturalValue = context.measureText(value).width;
+    textFont(unitSize, 650, numberFont);
+    const unitWidth = unit ? context.measureText(unit).width + 15 : 0;
+    textFont(39, 550);
+    const labelWidth = context.measureText(label).width;
+    return { label, value, unit, unitSize, valueSize, valueWidth: Math.min(naturalValue, available - unitWidth), width: Math.max(labelWidth, Math.min(naturalValue + unitWidth, available)) };
+  });
+  return { measures, width: horizontal ? measures.reduce((sum, m) => sum + m.width, (columns - 1) * 34) : Math.max(...measures.map((m) => m.width)), height: horizontal ? 135 : columns * 150 - 12 };
+}
+
+function wrapActivityText(text, maxWidth) {
+  const lines = [];
+  for (const paragraph of text.split(/\r?\n/)) {
+    let line = '';
+    for (const character of paragraph.trim()) {
+      if (line && context.measureText(line + character).width > maxWidth) {
+        lines.push(line.trimEnd());
+        line = '';
+      }
+      if (line || character !== ' ') line += character;
+    }
+    lines.push(line);
+  }
+  return lines;
+}
+
+function measureActivities(activities) {
+  if (!activities.length) return { lines: [], width: 0, height: 0 };
+  const maxWidth = 834;
+  const maxHeight = 900;
+  const headingHeight = 48;
+  let fontSize = 48;
+  let lines;
+  let lineHeight;
+  do {
+    textFont(fontSize, 700);
+    lines = activities.flatMap((activity) => wrapActivityText(activity, maxWidth));
+    lineHeight = fontSize * 1.28;
+    if (lines.length * lineHeight <= maxHeight || fontSize <= 1) break;
+    fontSize = Math.max(1, Math.floor(fontSize * 0.85));
+  } while (true);
+
+  const width = lines.reduce((longest, line) => Math.max(longest, context.measureText(line).width), 0);
+  textFont(39, 550);
+  return { lines, fontSize, lineHeight, headingHeight, width: Math.max(width, context.measureText('運動項目').width), height: headingHeight + lines.length * lineHeight };
+}
+
+const clamp = (n, min, max) => Math.max(min, Math.min(n, max));
+
+function blockBounds(key, size, defaultPoint) {
+  const point = state.positions[key] ?? defaultPoint;
+  return { x: clamp(point[0], 45, width - size.width - 44), y: clamp(point[1], 40, height - size.height - 42), ...size };
+}
+
+function placeDragBox(key, bounds) {
+  const node = dragBoxes[key];
+  node.hidden = state.step !== 3;
+  node.style.left = `${(bounds.x - 21) / width * 100}%`;
+  node.style.top = `${(bounds.y - 15) / height * 100}%`;
+  node.style.width = `${(bounds.width + 45) / width * 100}%`;
+  node.style.height = `${(bounds.height + 25) / height * 100}%`;
+}
+
+function washAround(bounds, darkText) {
+  const color = darkText ? '249,246,237' : '9,16,18';
+  const gradient = context.createRadialGradient(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2, 20,
+    bounds.x + bounds.width / 2, bounds.y + bounds.height / 2, Math.max(bounds.width * .9, bounds.height * .92) + 115);
+  gradient.addColorStop(0, `rgba(${color},${darkText ? .61 : .59})`);
+  gradient.addColorStop(.62, `rgba(${color},.33)`);
+  gradient.addColorStop(1, `rgba(${color},0)`);
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, width, height);
+}
+
+function draw() {
+  const { title, date, stats, activities } = cardContent();
+  const layout = layouts[state.layout];
+  const darkText = state.tone === 'dark';
+  const lines = titleLines(title, 834);
+  textFont(79, 850);
+  const lineWidths = lines.map((line) => context.measureText(line).width);
+  textFont(41, 500);
+  const titleWidth = Math.max(...lineWidths, context.measureText(date).width);
+  const titleBounds = blockBounds('title', { width: titleWidth, height: lines.length * 87 + 66 }, layout.title);
+  const statsSize = statsMeasure(stats, layout.horizontal);
+  const activitySize = measureActivities(activities);
+  const activityOffset = statsSize.height + (stats.length && activities.length ? 16 : 0);
+  const statsBounds = blockBounds('stats', {
+    width: Math.max(statsSize.width, activitySize.width),
+    height: activityOffset + activitySize.height,
+  }, layout.stats);
+  currentBounds = { title: titleBounds, stats: statsBounds };
+
+  drawPhoto();
+  washAround(titleBounds, darkText);
+  washAround(statsBounds, darkText);
+  context.fillStyle = darkText ? '#101717' : '#ffffff';
+  context.textBaseline = 'top';
+  context.textAlign = 'left';
+  textFont(79, 850);
+  lines.forEach((line, index) => context.fillText(line, titleBounds.x, titleBounds.y + index * 87));
+  textFont(41, 500);
+  context.fillText(date, titleBounds.x, titleBounds.y + lines.length * 87 + 9);
+
+  if (layout.stripes) {
+    context.beginPath();
+    context.strokeStyle = context.fillStyle;
+    context.lineWidth = 3;
+    for (let y = statsBounds.y + 16; y < statsBounds.y + statsBounds.height - 8; y += 22) {
+      context.moveTo(statsBounds.x - 30, y + 10);
+      context.lineTo(statsBounds.x - 17, y - 4);
+    }
+    context.stroke();
+  }
+
+  let x = statsBounds.x;
+  let y = statsBounds.y;
+  for (const measure of statsSize.measures) {
+    textFont(39, 550);
+    context.fillText(measure.label, x, y);
+    textFont(measure.valueSize, 850, numberFont);
+    context.fillText(measure.value, x, y + 48, measure.valueWidth);
+    if (measure.unit) {
+      textFont(measure.unitSize, 650, numberFont);
+      context.fillText(measure.unit, x + measure.valueWidth + 15, y + (layout.horizontal ? 73 : 83));
+    }
+    if (layout.horizontal) x += measure.width + 34;
+    else y += 150;
+  }
+  if (activitySize.lines.length) {
+    const activityY = statsBounds.y + activityOffset;
+    textFont(39, 550);
+    context.fillText('運動項目', statsBounds.x, activityY);
+    textFont(activitySize.fontSize, 700);
+    activitySize.lines.forEach((line, index) => {
+      context.fillText(line, statsBounds.x, activityY + activitySize.headingHeight + index * activitySize.lineHeight);
+    });
+  }
+  placeDragBox('title', titleBounds);
+  placeDragBox('stats', statsBounds);
+  const statLabels = stats.map(([heading, value, unit]) => `${heading} ${value} ${unit}`.trim());
+  const label = [title, date, ...statLabels, ...activities].join('，');
+  if (canvas.getAttribute('aria-label') !== label) canvas.setAttribute('aria-label', label);
+}
+
+function moveBlock(key, x, y) {
+  const bounds = currentBounds[key];
+  state.positions[key] = [clamp(x, 45, width - bounds.width - 44), clamp(y, 40, height - bounds.height - 42)];
+  invalidateOutput();
+  updateSteps();
+  scheduleDraw();
+}
+
+function bindDragging(key, node) {
+  node.addEventListener('pointerdown', (event) => {
+    if (event.button !== 0 || drag) return;
+    const { x, y } = currentBounds[key];
+    const rect = artwork.getBoundingClientRect();
+    drag = { id: event.pointerId, x, y, startX: event.clientX, startY: event.clientY, scaleX: width / rect.width, scaleY: height / rect.height };
+    node.setPointerCapture(event.pointerId);
+  });
+  node.addEventListener('pointermove', (event) => {
+    if (drag?.id !== event.pointerId) return;
+    moveBlock(key, drag.x + (event.clientX - drag.startX) * drag.scaleX, drag.y + (event.clientY - drag.startY) * drag.scaleY);
+  });
+  node.addEventListener('lostpointercapture', (event) => {
+    if (drag?.id === event.pointerId) drag = null;
+  });
+  node.addEventListener('keydown', (event) => {
+    const offset = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[event.key];
+    if (!offset) return;
+    event.preventDefault();
+    const step = event.shiftKey ? 38 : 10;
+    const { x, y } = currentBounds[key];
+    moveBlock(key, x + offset[0] * step, y + offset[1] * step);
+  });
+}
+
+function produceImage() {
+  if (!state.photo || state.rendering) return;
+  const button = $('#render-image');
+  const status = $('#render-status');
+  status.hidden = true;
+  invalidateOutput();
+  const version = state.artworkVersion;
+  state.rendering = true;
+  button.disabled = true;
+  button.textContent = '正在產生…';
+  draw();
+  function restore() {
+    state.rendering = false;
+    button.disabled = false;
+    button.textContent = '產生分享圖';
+  }
+  function showError() {
+    status.textContent = '圖片產生失敗，請重試或更換照片。';
+    status.hidden = false;
+  }
+  try {
+    canvas.toBlob((blob) => {
+      restore();
+      if (version !== state.artworkVersion || state.step !== 3) return;
+      if (!blob) {
+        showError();
+        return;
+      }
+      state.outputUrl = URL.createObjectURL(blob);
+      const link = $('#download-image');
+      link.href = state.outputUrl;
+      link.download = `步跡-運動分享圖-${dateInput.value}.png`;
+      go(4);
+    }, 'image/png');
+  } catch {
+    restore();
+    showError();
+  }
+}
+
+dateInput.value = today();
+renderCategories();
+renderRows();
+renderHistory();
+
+categoryList.addEventListener('click', (event) => {
+  const option = event.target.closest('button');
+  if (!option || option.dataset.category === state.category) return;
+  const last = state.rows.at(-1);
+  state.category = option.dataset.category;
+  const blank = blankRow(state.category);
+  if (Object.entries(last).every(([key, value]) => key === 'category' || value === '')) state.rows[state.rows.length - 1] = blank;
+  else state.rows.push(blank);
+  markDirty();
+  renderRows();
+});
+
+$('#add-row').addEventListener('click', () => {
+  state.rows.push(blankRow(state.category));
+  markDirty();
+  renderRows();
+  $('[data-key]', activityList.lastElementChild).focus();
+});
+
+activityList.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-remove]');
+  if (!button || state.rows.length === 1) return;
+  state.rows.splice(Number(button.dataset.remove), 1);
+  state.category = state.rows.at(-1).category;
+  markDirty();
+  renderRows();
+  $('#add-row').focus();
+});
+
+form.addEventListener('input', (event) => {
+  const control = event.target;
+  control.setCustomValidity?.('');
+  if (control.dataset.key) {
+    const element = control.closest('[data-row]');
+    const row = state.rows[Number(element.dataset.row)];
+    row[control.dataset.key] = control.value;
+    if (control.dataset.key === 'item') updateCustomControl(element, row);
+  }
+  markDirty();
+});
+
+form.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const invalid = state.rows.findIndex((row) => !completeRow(row));
+  if (invalid !== -1) {
+    updateFormNote(`請檢查第 ${invalid + 1} 項的內容與數值。`);
+    $('[data-key]', activityList.children[invalid]).focus();
+    return;
+  }
+  const summary = summarize(state.rows);
+  if (!Number.isFinite(summary.weight) || !Number.isSafeInteger(Math.round(summary.minutes * 60))) {
+    updateFormNote('合計數值超出可顯示範圍，請檢查輸入。');
+    return;
+  }
+  const saved = saveRecord();
+  renderHistory();
+  go(2);
+  if (saved === 'outside') showNotice('日期超出近 15 日範圍，這一筆可繼續製圖。');
+  if (saved === 'unavailable') showNotice('瀏覽器目前無法儲存紀錄。你仍可繼續製圖。');
+});
+
+for (const button of $$('.stepper button')) {
+  button.addEventListener('click', () => {
+    const next = Number(button.dataset.step);
+    if (next === 4 && !state.outputUrl) return;
+    if (next === 3 && (!state.photo || state.photoLoading)) return;
+    if (next !== state.step && next <= state.reachable) go(next);
+  });
+}
+for (const button of $$('[data-back]')) button.addEventListener('click', () => go(Number(button.dataset.back)));
+$('#export-data').addEventListener('click', exportRecords);
+window.addEventListener('storage', (event) => { if (event.key === STORAGE_KEY || event.key === null) renderHistory(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) renderHistory(); });
+
+const photoInput = $('#photo-input');
+const choosePhoto = $('#choose-photo');
+choosePhoto.addEventListener('click', () => photoInput.click());
+photoInput.addEventListener('change', () => {
+  openPhoto(photoInput.files[0]);
+  photoInput.value = '';
+});
+choosePhoto.addEventListener('dragover', (event) => {
+  event.preventDefault();
+  choosePhoto.classList.add('is-over');
+});
+choosePhoto.addEventListener('dragleave', (event) => {
+  if (!choosePhoto.contains(event.relatedTarget)) choosePhoto.classList.remove('is-over');
+});
+choosePhoto.addEventListener('drop', (event) => {
+  event.preventDefault();
+  choosePhoto.classList.remove('is-over');
+  openPhoto(event.dataTransfer.files[0]);
+});
+$('#photo-next').addEventListener('click', () => { if (state.photo && !state.photoLoading) go(3); });
+
+$('#layouts').innerHTML = Object.entries(layouts).map(([key, layout]) => `
+  <button class="layout-choice" type="button" data-layout="${key}" aria-pressed="false">
+    <span class="layout-thumbnail" aria-hidden="true"></span>${layout.label}
+  </button>`).join('');
+updateStyleButtons();
+
+$('#layouts').addEventListener('click', (event) => {
+  const option = event.target.closest('button');
+  if (!option || option.dataset.layout === state.layout) return;
+  state.layout = option.dataset.layout;
+  state.positions = {};
+  invalidateOutput();
+  updateSteps();
+  updateStyleButtons();
+  draw();
+});
+$('#tones').addEventListener('click', (event) => {
+  const option = event.target.closest('button');
+  if (!option || option.dataset.tone === state.tone) return;
+  state.tone = option.dataset.tone;
+  invalidateOutput();
+  updateSteps();
+  updateStyleButtons();
+  draw();
+});
+$('#reset-position').addEventListener('click', () => {
+  state.positions = {};
+  invalidateOutput();
+  updateSteps();
+  draw();
+});
+for (const [key, node] of Object.entries(dragBoxes)) bindDragging(key, node);
+$('#render-image').addEventListener('click', produceImage);
+$('#start-over').addEventListener('click', () => {
+  form.reset();
+  dateInput.value = today();
+  state.activeId = null;
+  state.category = 'weights';
+  state.rows = [blankRow('weights')];
+  clearPhoto();
+  resetStyle();
+  updateFormNote();
+  $('#history').open = false;
+  renderRows();
+  renderHistory();
+  go(1);
+});
+
+draw();
+
+</script>
+</body>
+</html>
