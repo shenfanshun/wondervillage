@@ -209,6 +209,12 @@ input::placeholder, textarea::placeholder { color: #a6a6a6; opacity: 1; }
   .primary { padding-inline: 13px; }
 }
 
+@media (max-width: 305px) {
+  .topbar { gap: 8px; }
+  .wordmark { font-size: 1rem; }
+  .export { font-size: .8125rem; gap: 6px; padding-inline: 7px; }
+}
+
 </style>
 </head>
 <body>
@@ -231,8 +237,8 @@ input::placeholder, textarea::placeholder { color: #a6a6a6; opacity: 1; }
   </svg>
   <header class="site-header">
     <div class="shell topbar">
-      <div class="brand"><span class="brand-mark"><svg><use href="#pulse"/></svg></span><span class="wordmark">步跡<span>運動分享圖</span></span></div>
-      <button class="button secondary export" id="export-data" type="button"><svg><use href="#download"/></svg><span>下載運動數據</span></button>
+      <div class="brand"><span class="brand-mark"><svg><use href="#pulse"/></svg></span><span class="wordmark">SportZone<span>運動分享圖</span></span></div>
+      <button class="button secondary export" id="export-data" type="button"><svg><use href="#download"/></svg><span lang="en">Download Data</span></button>
     </div>
   </header>
   <main class="shell">
@@ -614,26 +620,27 @@ function summarize(rows) {
   return { weight, minutes, hasWeight, hasTime, count: complete.length, title, activityNames: [...activityNames], customActivities };
 }
 
-function timeLabel(minutes) {
-  const totalSeconds = Math.round(minutes * 60);
-  const hours = Math.floor(totalSeconds / 3600);
-  const wholeMinutes = Math.floor(totalSeconds / 60) % 60;
-  const seconds = totalSeconds % 60;
-  return [hours ? `${hours} 小時` : '', wholeMinutes ? `${wholeMinutes} 分` : '', seconds ? `${seconds} 秒` : ''].filter(Boolean).join(' ') || '0 分';
+function timeParts(minutes) {
+  const totalMinutes = Math.round(minutes);
+  const hours = Math.floor(totalMinutes / 60);
+  const parts = [String(totalMinutes % 60), 'min'];
+  if (hours) parts.unshift(String(hours), 'h');
+  return parts;
 }
 
 function cardContent() {
   const summary = summarize(state.rows);
   const usingExample = !summary.count && !state.photo;
+  const name = nameInput.value.trim();
   const defaultTitle = summary.customActivities.length && !summary.activityNames.length ? '運動紀錄' : summary.title;
-  const title = nameInput.value.trim() || (usingExample ? '戶外運動' : defaultTitle);
+  const title = name ? '' : usingExample ? '戶外運動' : defaultTitle;
   const stats = [];
-  if (summary.hasWeight) stats.push(['合計重量', numberFormat.format(summary.weight), 'kg']);
-  if (summary.hasTime || usingExample) stats.push(['總計時間', timeLabel(usingExample ? 42 : summary.minutes), '']);
+  if (summary.hasWeight) stats.push(['Total Weight', [numberFormat.format(summary.weight), 'kg']]);
+  if (summary.hasTime || usingExample) stats.push(['Total Time', timeParts(usingExample ? 42 : summary.minutes)]);
   const activityNames = usingExample ? ['戶外運動'] : summary.activityNames;
   const activities = summary.customActivities.slice();
   if (activityNames.length) activities.unshift(activityNames.join('、'));
-  return { title, date: dateLabel(dateInput.value || today()), stats, activities };
+  return { title, name, date: (dateInput.value || today()).replaceAll('-', '.'), stats, activities };
 }
 
 function exportRecords() {
@@ -775,6 +782,7 @@ function trimText(text, limit) {
 }
 
 function titleLines(title, limit) {
+  if (!title) return [];
   textFont(79, 850);
   const letters = Array.from(title.replace(/\s+/g, ' '));
   let first = '';
@@ -787,15 +795,22 @@ function statsMeasure(stats, horizontal) {
   if (!columns) return { measures: [], width: 0, height: 0 };
   const available = horizontal ? Math.min(270, Math.floor(895 / columns) - 36) : 810;
   const valueSize = horizontal ? 66 : 97;
-  const measures = stats.map(([label, value, unit]) => {
-    textFont(valueSize, 850, numberFont);
-    const unitSize = horizontal ? 32 : 48;
-    const naturalValue = context.measureText(value).width;
-    textFont(unitSize, 650, numberFont);
-    const unitWidth = unit ? context.measureText(unit).width + 15 : 0;
+  const unitSize = horizontal ? 32 : 48;
+  const gap = horizontal ? 9 : 14;
+  const measures = stats.map(([label, parts]) => {
+    const segments = parts.map((text, index) => {
+      const isUnit = index % 2 === 1;
+      const size = isUnit ? unitSize : valueSize;
+      const weight = isUnit ? 800 : 850;
+      textFont(size, weight, numberFont);
+      return { text, size, weight, width: context.measureText(text).width };
+    });
+    const gapsWidth = (segments.length - 1) * gap;
+    const textWidth = segments.reduce((sum, segment) => sum + segment.width, 0);
+    const scale = Math.min(1, (available - gapsWidth) / textWidth);
     textFont(39, 550);
     const labelWidth = context.measureText(label).width;
-    return { label, value, unit, unitSize, valueSize, valueWidth: Math.min(naturalValue, available - unitWidth), width: Math.max(labelWidth, Math.min(naturalValue + unitWidth, available)) };
+    return { label, segments, gap, scale, valueSize, width: Math.max(labelWidth, textWidth * scale + gapsWidth) };
   });
   return { measures, width: horizontal ? measures.reduce((sum, m) => sum + m.width, (columns - 1) * 34) : Math.max(...measures.map((m) => m.width)), height: horizontal ? 135 : columns * 150 - 12 };
 }
@@ -864,8 +879,26 @@ function washAround(bounds, darkText) {
   context.fillRect(0, 0, width, height);
 }
 
+function drawNameTag(name, darkText) {
+  if (!name) return;
+  const tagWidth = 44;
+  const padding = 14;
+  const maxTextWidth = 820;
+  textFont(29, 850);
+  const tagLength = Math.min(context.measureText(name).width, maxTextWidth) + padding * 2;
+  context.save();
+  context.translate(width - tagWidth / 2, height - 145);
+  context.rotate(-Math.PI / 2);
+  context.fillStyle = darkText ? '#ffffffeb' : '#101717eb';
+  context.fillRect(0, -tagWidth / 2, tagLength, tagWidth);
+  context.fillStyle = darkText ? '#101717' : '#ffffff';
+  context.textBaseline = 'middle';
+  context.fillText(name, padding, 0, maxTextWidth);
+  context.restore();
+}
+
 function draw() {
-  const { title, date, stats, activities } = cardContent();
+  const { title, name, date, stats, activities } = cardContent();
   const layout = layouts[state.layout];
   const darkText = state.tone === 'dark';
   const lines = titleLines(title, 834);
@@ -873,7 +906,8 @@ function draw() {
   const lineWidths = lines.map((line) => context.measureText(line).width);
   textFont(41, 500);
   const titleWidth = Math.max(...lineWidths, context.measureText(date).width);
-  const titleBounds = blockBounds('title', { width: titleWidth, height: lines.length * 87 + 66 }, layout.title);
+  const dateOffset = lines.length ? lines.length * 87 + 9 : 0;
+  const titleBounds = blockBounds('title', { width: titleWidth, height: dateOffset + 57 }, layout.title);
   const statsSize = statsMeasure(stats, layout.horizontal);
   const activitySize = measureActivities(activities);
   const activityOffset = statsSize.height + (stats.length && activities.length ? 16 : 0);
@@ -892,7 +926,7 @@ function draw() {
   textFont(79, 850);
   lines.forEach((line, index) => context.fillText(line, titleBounds.x, titleBounds.y + index * 87));
   textFont(41, 500);
-  context.fillText(date, titleBounds.x, titleBounds.y + lines.length * 87 + 9);
+  context.fillText(date, titleBounds.x, titleBounds.y + dateOffset);
 
   if (layout.stripes) {
     context.beginPath();
@@ -910,11 +944,13 @@ function draw() {
   for (const measure of statsSize.measures) {
     textFont(39, 550);
     context.fillText(measure.label, x, y);
-    textFont(measure.valueSize, 850, numberFont);
-    context.fillText(measure.value, x, y + 48, measure.valueWidth);
-    if (measure.unit) {
-      textFont(measure.unitSize, 650, numberFont);
-      context.fillText(measure.unit, x + measure.valueWidth + 15, y + (layout.horizontal ? 73 : 83));
+    let segmentX = x;
+    for (const segment of measure.segments) {
+      textFont(segment.size, segment.weight, numberFont);
+      const segmentWidth = segment.width * measure.scale;
+      const segmentY = y + 48 + (measure.valueSize - segment.size) * 0.71;
+      context.fillText(segment.text, segmentX, segmentY, segmentWidth);
+      segmentX += segmentWidth + measure.gap;
     }
     if (layout.horizontal) x += measure.width + 34;
     else y += 150;
@@ -928,10 +964,11 @@ function draw() {
       context.fillText(line, statsBounds.x, activityY + activitySize.headingHeight + index * activitySize.lineHeight);
     });
   }
+  drawNameTag(name, darkText);
   placeDragBox('title', titleBounds);
   placeDragBox('stats', statsBounds);
-  const statLabels = stats.map(([heading, value, unit]) => `${heading} ${value} ${unit}`.trim());
-  const label = [title, date, ...statLabels, ...activities].join('，');
+  const statLabels = stats.map(([heading, parts]) => `${heading} ${parts.join(' ')}`);
+  const label = [name || title, date, ...statLabels, ...activities].join('，');
   if (canvas.getAttribute('aria-label') !== label) canvas.setAttribute('aria-label', label);
 }
 
