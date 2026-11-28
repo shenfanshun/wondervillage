@@ -373,7 +373,6 @@ const artwork = $('#artwork');
 const dragBoxes = { title: $('#title-drag'), stats: $('#stats-drag') };
 const canvasFont = '"Noto Sans TC", "Microsoft JhengHei", "PingFang TC", sans-serif';
 const numberFont = 'Bahnschrift, "Arial Narrow", "Noto Sans TC", "Microsoft JhengHei", sans-serif';
-const nameTagWidth = 54;
 let storageWarning = false;
 let noticeTimer = 0;
 let frame = 0;
@@ -649,7 +648,7 @@ function cardContent() {
   const usingExample = !summary.count && !state.photo;
   const name = nameInput.value.trim();
   const defaultTitle = summary.customActivities.length && !summary.activityNames.length ? '運動紀錄' : summary.title;
-  const title = name ? '' : usingExample ? '戶外運動' : defaultTitle;
+  const title = name || (usingExample ? '戶外運動' : defaultTitle);
   const stats = [];
   if (summary.hasWeight) stats.push(['Total Weight', [numberFormat.format(summary.weight), 'kg']]);
   if (summary.hasTime || usingExample) stats.push(['Total Minutes', [numberFormat.format(usingExample ? 42 : summary.minutes), 'min']]);
@@ -657,7 +656,7 @@ function cardContent() {
   const activities = summary.customActivities.slice();
   if (activityNames.length) activities.unshift(activityNames.join('、'));
   const [year, month, day] = (dateInput.value || today()).split('-');
-  return { title, name, date: `${month}.${day}.${year}`, stats, activities };
+  return { title, date: `${month}.${day}.${year}`, stats, activities };
 }
 
 function exportRecords() {
@@ -873,8 +872,7 @@ function measureActivities(activities) {
 const clamp = (n, min, max) => Math.max(min, Math.min(n, max));
 
 function maxBlockX(blockWidth) {
-  const rightMargin = nameInput.value.trim() ? nameTagWidth + 8 : 44;
-  return width - blockWidth - rightMargin;
+  return width - blockWidth - 44;
 }
 
 function blockBounds(key, size, defaultPoint) {
@@ -891,35 +889,8 @@ function placeDragBox(key, bounds) {
   node.style.height = `${(bounds.height + 25) / height * 100}%`;
 }
 
-function drawNameTag(name, darkText) {
-  if (!name) return;
-  const x = width - nameTagWidth;
-  const y = height - 161;
-  const padding = 16;
-  const maxTextWidth = 820;
-
-  context.save();
-  textFont(36, 850);
-  const textWidth = Math.min(context.measureText(name).width, maxTextWidth);
-  context.fillStyle = darkText ? '#ffffffeb' : '#101717eb';
-  context.shadowColor = 'rgba(0, 0, 0, 0.45)';
-  context.shadowBlur = 9;
-  context.shadowOffsetX = -5;
-  context.shadowOffsetY = 5;
-  context.fillRect(x, y - textWidth - padding, nameTagWidth, textWidth + padding * 2);
-  context.restore();
-
-  context.save();
-  context.translate(x + nameTagWidth / 2, y);
-  context.rotate(-Math.PI / 2);
-  textFont(36, 850);
-  context.textBaseline = 'middle';
-  context.fillText(name, 0, 0, maxTextWidth);
-  context.restore();
-}
-
 function draw() {
-  const { title, name, date, stats, activities } = cardContent();
+  const { title, date, stats, activities } = cardContent();
   const layout = layouts[state.layout];
   const darkText = state.tone === 'dark';
   const dateFont = 'Arial, sans-serif';
@@ -993,11 +964,10 @@ function draw() {
       context.fillText(line, statsBounds.x, activityY + activitySize.headingHeight + index * activitySize.lineHeight);
     });
   }
-  drawNameTag(name, darkText);
   placeDragBox('title', titleBounds);
   placeDragBox('stats', statsBounds);
   const statLabels = stats.map(([heading, parts]) => `${heading} ${parts.join(' ')}`);
-  const label = [name || title, date, ...statLabels, ...activities].join('，');
+  const label = [title, date, ...statLabels, ...activities].join('，');
   if (canvas.getAttribute('aria-label') !== label) canvas.setAttribute('aria-label', label);
 }
 
